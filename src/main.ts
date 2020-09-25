@@ -1,5 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { join } from 'path';
+import * as mongoose from 'mongoose';
 import compression from 'fastify-compress';
 import helmet from 'fastify-helmet';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
@@ -10,6 +11,7 @@ import { AppModule } from './app.module';
 
 async function bootstrap() {
     const app = await NestFactory.create<NestFastifyApplication>(AppModule, new FastifyAdapter());
+    mongoose.set('debug', true);
     app.useGlobalPipes(new ValidationPipe());
     app.useGlobalInterceptors(new ResponseInterceptor());
 

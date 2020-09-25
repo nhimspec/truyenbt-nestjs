@@ -1,8 +1,6 @@
 import { Logger, Module } from '@nestjs/common';
 import * as winston from 'winston';
 import * as dayjs from 'dayjs';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ScheduleModule } from '@nestjs/schedule';
 import { TasksModule } from './tasks/tasks.module';
@@ -48,7 +46,6 @@ const date = dayjs().format(DATE_FORMAT);
         TasksModule,
         ApiModule,
     ],
-    controllers: [AppController],
-    providers: [AppService, Logger],
+    providers: [Logger],
 })
 export class AppModule {}
