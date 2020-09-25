@@ -3,13 +3,13 @@ import * as winston from 'winston';
 import * as dayjs from 'dayjs';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { MangaController } from './manga/manga.controller';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ScheduleModule } from '@nestjs/schedule';
 import { TasksModule } from './tasks/tasks.module';
 import { WinstonModule } from 'nest-winston';
 import { ConfigModule } from '@nestjs/config';
 import { DATE_FORMAT } from './common/constants';
+import { ApiModule } from '@src/api/api.module';
 
 const date = dayjs().format(DATE_FORMAT);
 
@@ -46,8 +46,9 @@ const date = dayjs().format(DATE_FORMAT);
         }),
 
         TasksModule,
+        ApiModule,
     ],
-    controllers: [AppController, MangaController],
+    controllers: [AppController],
     providers: [AppService, Logger],
 })
 export class AppModule {}

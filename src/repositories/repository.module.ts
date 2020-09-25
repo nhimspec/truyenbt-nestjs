@@ -8,6 +8,8 @@ import MangaChapterRepository from './manga-chapter.repository';
 import AuthorRepository from './author.repository';
 import MangaRepository from './manga.repository';
 import TagRepository from './tag.repository';
+import { ChapterView, ChapterViewSchema } from '@src/schemas/chapter-view.schema';
+import ChapterViewRepository from '@src/repositories/chapter-view.repository';
 
 @Module({
     imports: [
@@ -15,10 +17,11 @@ import TagRepository from './tag.repository';
             { name: Tag.name, schema: TagSchema },
             { name: Manga.name, schema: MangaSchema },
             { name: MangaChapter.name, schema: MangaChapterSchema },
+            { name: ChapterView.name, schema: ChapterViewSchema },
             { name: Author.name, schema: AuthorSchema },
         ]),
     ],
-    providers: [MangaChapterRepository, AuthorRepository, MangaRepository, TagRepository],
-    exports: [MangaChapterRepository, AuthorRepository, MangaRepository, TagRepository],
+    providers: [MangaChapterRepository, AuthorRepository, ChapterViewRepository, MangaRepository, TagRepository],
+    exports: [MangaChapterRepository, AuthorRepository, ChapterViewRepository, MangaRepository, TagRepository],
 })
 export class RepositoryModule {}

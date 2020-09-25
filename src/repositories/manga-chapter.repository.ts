@@ -22,6 +22,24 @@ class MangaChapterRepository extends BaseRepository<MangaChapter> {
 
         return query;
     }
+
+    findOneChapterByManga(manga: Manga, chapterNumber: number) {
+        return this.findOne({
+            manga: manga._id,
+            number: chapterNumber,
+        })
+            .select('-__v')
+            .sort({ number: 'desc' });
+    }
+
+    setImagesPath(mangaChapter: MangaChapter, uploadBaseUrl: string) {
+        mangaChapter.get('images').map(image => {
+            image.imageUrl = `${uploadBaseUrl}${image.imageUrl}`;
+            return image;
+        });
+
+        return mangaChapter;
+    }
 }
 
 export default MangaChapterRepository;

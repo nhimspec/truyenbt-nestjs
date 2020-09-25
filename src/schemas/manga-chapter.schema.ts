@@ -1,5 +1,5 @@
 import { Prop, raw, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, DocumentQuery, Model, Schema as MongooseSchema } from 'mongoose';
+import { Document, Schema as MongooseSchema } from 'mongoose';
 import { Manga } from './manga.schema';
 
 export interface MangaChapterImage {
@@ -26,20 +26,3 @@ export class MangaChapter extends Document {
 }
 
 export const MangaChapterSchema = SchemaFactory.createForClass(MangaChapter);
-
-MangaChapterSchema.static('findChaptersByManga', function(
-    this: Model<MangaChapter>,
-    manga: Manga,
-    limit?: number,
-): DocumentQuery<MangaChapter[], MangaChapter> {
-    let query: DocumentQuery<MangaChapter[], MangaChapter> = this.find({
-        manga: manga._id,
-    })
-        .select('number viewCount publishedAt')
-        .sort({ number: 'desc' });
-    if (limit) {
-        query = query.limit(limit);
-    }
-
-    return query;
-});

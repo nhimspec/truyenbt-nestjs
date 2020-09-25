@@ -167,7 +167,7 @@ class MangaDetailBusiness {
         const filePath = `/public/mangas/${mangaSlug}/`;
         const fullPath = `${rootPath}${filePath}`;
         try {
-            let imagePreview: string | null = $('.block01 .left img').attr('src')!;
+            let imagePreview: string = $('.block01 .left img').attr('src')!;
             const fileName = `preview.jpg`;
             if (!!imagePreview && !fileExists(`${fullPath}${fileName}`)) {
                 await mkdir(fullPath);

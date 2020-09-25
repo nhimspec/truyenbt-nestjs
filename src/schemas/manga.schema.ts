@@ -8,6 +8,14 @@ export enum MANGA_STATUS {
     COMPLETE = '1',
 }
 
+export enum MANGA_SORT_TYPE {
+    BY_CREATED = '0',
+    BY_TOP_ALL = '1',
+    BY_TOP_YEAR = '2',
+    BY_TOP_MONTH = '3',
+    BY_TOP_WEEK = '4',
+}
+
 @Schema({
     timestamps: true,
     toObject: { getters: true },

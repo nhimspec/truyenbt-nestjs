@@ -1,8 +1,9 @@
+import * as slug from 'slug';
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import * as slug from 'slug';
 import { CrawlService } from '@src/common/crawl/crawl.service';
 import TagRepository from '@src/repositories/tag.repository';
+import { delay } from '@src/helpers/utils';
 import MangaDetailBusiness from './manga-detail.business';
 
 @Injectable()
@@ -142,6 +143,8 @@ class MangaListBusiness {
             if (!this.isContinue) {
                 break;
             }
+
+            await delay(5000);
         }
     }
 }
