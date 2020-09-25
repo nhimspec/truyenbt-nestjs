@@ -15,6 +15,7 @@ class MangaChapterBusiness {
     constructor(private crawlService: CrawlService) {}
 
     async execute(manga: Manga, chapterNumber: number, mangaChapterUrl: string): Promise<MangaChapterImage[]> {
+        this.counter = 1;
         this.manga = manga;
         this.chapterNumber = chapterNumber;
         this.mangaChapterUrl = mangaChapterUrl;
