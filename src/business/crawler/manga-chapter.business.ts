@@ -84,7 +84,7 @@ class MangaChapterBusiness {
         manga: Manga,
         dataImages: MangaChapterImage[],
     ): Promise<MangaChapterImage[] | null> {
-        const rootPath: string = path.join(__dirname, '../../../', 'public/');
+        const rootPath: string = path.join(__dirname, '../../../');
         const mangaSlug: string = manga.slug;
         const filePath = `/public/mangas/${mangaSlug}/${this.chapterNumber}/`;
         const fullPath = `${rootPath}${filePath}`;

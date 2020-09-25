@@ -163,7 +163,7 @@ class MangaDetailBusiness {
     }
 
     async getMangaPreviewImage($: cheerio.Root, mangaSlug: string): Promise<string> {
-        const rootPath: string = path.join(__dirname, '../../../', 'public/');
+        const rootPath: string = path.join(__dirname, '../../../');
         const filePath = `/public/mangas/${mangaSlug}/`;
         const fullPath = `${rootPath}${filePath}`;
         try {

@@ -16,6 +16,7 @@ async function bootstrap() {
     app.useGlobalInterceptors(new ResponseInterceptor());
 
     app.useStaticAssets({
+        prefix: '/public/',
         root: join(__dirname, '..', 'public'),
     });
 
