@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { DocumentQuery, Model } from 'mongoose';
+import { DocumentQuery, FilterQuery, Model } from 'mongoose';
 import { Manga } from '@src/schemas/manga.schema';
 import BaseRepository from './base.repository';
 import { paginate } from '@src/helpers/utils';
@@ -15,20 +15,21 @@ class MangaRepository extends BaseRepository<Manga> {
         super();
     }
 
-    getListPaginate(page: number, perPage: number) {
-        const itemsQuery: DocumentQuery<Manga[], Manga> = this.find({})
+    getListPaginate(page: number, perPage: number, conditions?: FilterQuery<Manga>) {
+        const filters = conditions ? conditions : {};
+        const itemsQuery: DocumentQuery<Manga[], Manga> = this.find(filters)
+            .limit(perPage)
+            .skip(perPage * (page - 1))
+            .select('-__v -author')
             .populate({
                 path: 'tags',
                 select: '-__v',
             })
-            .select('-__v -author')
-            .limit(perPage)
-            .skip(perPage * (page - 1))
             .sort({
                 publishedAt: 'desc',
             });
 
-        const totalQuery = this.countDocuments({});
+        const totalQuery = this.countDocuments(filters);
 
         return paginate<Manga>(itemsQuery, totalQuery, page, perPage);
     }

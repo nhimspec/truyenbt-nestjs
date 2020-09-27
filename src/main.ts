@@ -8,6 +8,7 @@ import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify
 import { ValidationPipe } from '@src/pipes/validation.pipe';
 import { ResponseInterceptor } from '@src/interceptors/response.interceptor';
 import { AppModule } from './app.module';
+import { useContainer } from 'class-validator';
 
 async function bootstrap() {
     const app = await NestFactory.create<NestFastifyApplication>(AppModule, new FastifyAdapter());
@@ -24,6 +25,8 @@ async function bootstrap() {
     app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER));
     app.register(compression, { encodings: ['gzip', 'deflate'] });
     app.register(helmet);
+
+    useContainer(app.select(AppModule), { fallbackOnErrors: true });
 
     await app.listen(8888);
 }

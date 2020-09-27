@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query, Headers, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, Query, Headers, UseGuards, Put } from '@nestjs/common';
 import { Paginate } from '@src/helpers/typeHelper';
 import { Manga, MANGA_SORT_TYPE, MANGA_STATUS } from '@src/schemas/manga.schema';
 import MangaBusiness from '@src/business/api/manga.business';
@@ -54,6 +54,18 @@ export class MangaController {
         const manga: Manga | null = await this.mangaBusiness.getMangaDetail(slug);
 
         return { data: manga, message: 'Show manga detail' };
+    }
+
+    @Put(':slug/like')
+    async likeManga(@Param() { slug }: { slug: string }) {
+        await this.mangaBusiness.likeManga(slug);
+        return { data: true, message: 'Like successful' };
+    }
+
+    @Put(':slug/follow')
+    async followManga(@Param() { slug }: { slug: string }) {
+        await this.mangaBusiness.followManga(slug);
+        return { data: true, message: 'Follow successful' };
     }
 
     @Get(':slug/:chapter')

@@ -4,7 +4,6 @@ import { Manga, MANGA_SORT_TYPE, MANGA_STATUS } from '@src/schemas/manga.schema'
 import MangaRepository from '@src/repositories/manga.repository';
 import { Aggregate } from 'mongoose';
 import ChapterViewRepository from '@src/repositories/chapter-view.repository';
-import { ChapterView } from '@src/schemas/chapter-view.schema';
 import { DATE_SORT } from '@src/common/constants';
 import MangaChapterRepository from '@src/repositories/manga-chapter.repository';
 import { ConfigService } from '@nestjs/config';
@@ -132,6 +131,46 @@ export default class MangaBusiness {
     }
 
     /**
+     * Like Manga
+     *
+     * @param slug
+     */
+    async likeManga(slug: string): Promise<boolean> {
+        await this.mangaRepository.findOneAndUpdate(
+            {
+                slug,
+            },
+            {
+                $inc: {
+                    like: 1,
+                },
+            },
+        );
+
+        return true;
+    }
+
+    /**
+     * Follow Manga
+     *
+     * @param slug
+     */
+    async followManga(slug: string): Promise<boolean> {
+        await this.mangaRepository.findOneAndUpdate(
+            {
+                slug,
+            },
+            {
+                $inc: {
+                    follow: 1,
+                },
+            },
+        );
+
+        return true;
+    }
+
+    /**
      * Show chapter manga detail
      * @param slug
      * @param chapter
@@ -142,7 +181,7 @@ export default class MangaBusiness {
             .findOne({
                 slug,
             })
-            .select('name slug viewCount');
+            .select('name slug viewCount imagePreview');
         let mangaChapter: MangaChapter | null = null;
         if (!!manga) {
             const chapterNumber: number = positiveVal(chapter, 0);
@@ -231,13 +270,42 @@ export default class MangaBusiness {
                 break;
         }
 
-        query = query
-            .project({ chapterViews: 0, author: 0, __v: 0, tags: { __v: 0 } })
+        query = query.project({ chapterViews: 0, author: 0, __v: 0, tags: { __v: 0 } }).addFields({
+            imagePreview: {
+                $concat: [this.uploadBaseUrl, '$imagePreview'],
+            },
+        });
+
+        return this._paginateWithTagAndChapters(query, perPage, page, 3);
+    }
+
+    _querySortByDate(query: Aggregate<any>, days: number) {
+        const sortDate: Date = new Date(new Date().getTime() - days * 24 * 60 * 60 * 1000);
+        return query
+            .lookup({
+                from: this.chapterViewRepository.collectionName(),
+                as: 'chapterViews',
+                let: { mangaId: '$_id' },
+                pipeline: [
+                    {
+                        $match: {
+                            $expr: {
+                                $and: [{ $eq: ['$manga', '$$mangaId'] }, { $gte: ['$updatedAt', sortDate] }],
+                            },
+                        },
+                    },
+                ],
+            })
             .addFields({
-                imagePreview: {
-                    $concat: [this.uploadBaseUrl, '$imagePreview'],
+                chapterViews: {
+                    $size: '$chapterViews',
                 },
             })
+            .sort({ chapterViews: -1, publishedAt: -1 });
+    }
+
+    async _paginateWithTagAndChapters(query: Aggregate<any>, perPage: number, page: number, limitChapters: number) {
+        const result = await query
             .facet({
                 items: [
                     { $skip: perPage * (page - 1) },
@@ -260,7 +328,7 @@ export default class MangaBusiness {
                                     $match: { $expr: { $eq: ['$manga', '$$mangaId'] } },
                                 },
                                 { $sort: { number: -1 } },
-                                { $limit: 3 },
+                                { $limit: limitChapters },
                                 { $project: { number: 1, viewCount: 1, publishedAt: 1 } },
                             ],
                         },
@@ -283,33 +351,6 @@ export default class MangaBusiness {
                 perPage,
             });
 
-        const result = await query;
-
         return result.length > 0 ? result[0] : null;
-    }
-
-    _querySortByDate(query: Aggregate<any>, days: number) {
-        const sortDate: Date = new Date(new Date().getTime() - days * 24 * 60 * 60 * 1000);
-        return query
-            .lookup({
-                from: ChapterView.name,
-                as: 'chapterViews',
-                let: { mangaId: '$_id' },
-                pipeline: [
-                    {
-                        $match: {
-                            $expr: {
-                                $and: [{ $eq: ['$manga', '$$mangaId'] }, { $gte: ['$updatedAt', sortDate] }],
-                            },
-                        },
-                    },
-                ],
-            })
-            .addFields({
-                chapterViews: {
-                    $size: '$chapterViews',
-                },
-            })
-            .sort({ chapterViews: -1, publishedAt: -1 });
     }
 }

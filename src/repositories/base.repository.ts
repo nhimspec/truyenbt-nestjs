@@ -11,6 +11,10 @@ import {
 class BaseRepository<T extends Document> {
     protected model: Model<T>;
 
+    newInstance() {
+        return new this.model();
+    }
+
     collectionName(): string {
         return this.model.collection.name;
     }

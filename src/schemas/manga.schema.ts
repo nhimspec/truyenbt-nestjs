@@ -45,6 +45,12 @@ export class Manga extends Document {
     @Prop({ type: Number, default: 0 })
     viewCount: number;
 
+    @Prop({ type: Number, default: 0 })
+    like: number;
+
+    @Prop({ type: Number, default: 0 })
+    follow: number;
+
     @Prop()
     description: string;
 

@@ -6,3 +6,10 @@ export type Paginate<T> = {
     perPage: number;
     totalPages: number;
 };
+
+export type JWTPayload = {
+    _id: string;
+    email: string;
+    createdAt: string;
+    updatedAt: string;
+};
