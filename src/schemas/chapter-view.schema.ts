@@ -6,7 +6,7 @@ import { MangaChapter } from '@src/schemas/manga-chapter.schema';
 @Schema({ timestamps: true })
 export class ChapterView extends Document {
     @Prop()
-    userToken: string;
+    accessCountToken: string;
 
     @Prop({ type: MongooseSchema.Types.ObjectId, ref: MangaChapter.name })
     mangaChapter: MangaChapter;

@@ -3,6 +3,7 @@ import UserRepository from '@src/repositories/user.repository';
 import { User } from '@src/schemas/user.schema';
 import { JwtService } from '@nestjs/jwt';
 import { JWTPayload } from '@src/helpers/typeHelper';
+import { v4 } from 'uuid';
 
 @Injectable()
 export class AuthService {
@@ -16,9 +17,12 @@ export class AuthService {
         return null;
     }
 
-    async createUser(email: string, password: string) {
+    async createUser(email: string, password: string, firstName: string, lastName: string) {
         const user: User = this.userRepository.newInstance();
         user.email = email;
+        user.firstName = firstName;
+        user.lastName = lastName;
+        user.accessCountToken = v4();
         this.userRepository.setPassword(user, password);
         await user.save();
 
@@ -36,6 +40,7 @@ export class AuthService {
         const payload: JWTPayload = {
             _id: user._id,
             email: user.email,
+            accessCountToken: user.accessCountToken,
             createdAt: user.createdAt,
             updatedAt: user.updatedAt,
         };

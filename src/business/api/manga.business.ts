@@ -174,9 +174,9 @@ export default class MangaBusiness {
      * Show chapter manga detail
      * @param slug
      * @param chapter
-     * @param userToken
+     * @param accessCountToken
      */
-    async showChapterDetail(slug: string, chapter: number, userToken: string): Promise<Manga | null> {
+    async showChapterDetail(slug: string, chapter: number, accessCountToken: string): Promise<Manga | null> {
         let manga: Manga | null = await this.mangaRepository
             .findOne({
                 slug,
@@ -189,8 +189,8 @@ export default class MangaBusiness {
 
             if (!!mangaChapter) {
                 const chapterView = await this.chapterViewRepository.findOneAndUpdateRaw(
-                    { mangaChapter, manga, userToken },
-                    { userToken },
+                    { mangaChapter, manga, accessCountToken },
+                    { accessCountToken },
                     { new: true, upsert: true, rawResult: true },
                 );
 

@@ -22,6 +22,9 @@ export class User extends Document {
     password: string;
 
     @Prop()
+    accessCountToken: string;
+
+    @Prop()
     gender: number;
 
     createdAt: string;

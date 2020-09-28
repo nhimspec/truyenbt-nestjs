@@ -10,6 +10,7 @@ export type Paginate<T> = {
 export type JWTPayload = {
     _id: string;
     email: string;
+    accessCountToken: string;
     createdAt: string;
     updatedAt: string;
 };
