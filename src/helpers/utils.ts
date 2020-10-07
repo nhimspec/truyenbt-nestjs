@@ -8,6 +8,12 @@ export function fileExists(filePath: string): boolean {
 export async function mkdir(filePath: string): Promise<string> {
     return fs.promises.mkdir(filePath, { recursive: true });
 }
+export function getDirectories(path: string): string[] {
+    return fs
+        .readdirSync(path, { withFileTypes: true })
+        .filter(dirent => dirent.isDirectory())
+        .map(dirent => dirent.name);
+}
 
 export async function rmDir(filePath: string): Promise<void> {
     return fs.promises.rmdir(filePath, { recursive: true });
