@@ -1,8 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { Paginate } from '@src/helpers/typeHelper';
 import { Manga, MANGA_SORT_TYPE, MANGA_STATUS } from '@src/schemas/manga.schema';
 import MangaRepository from '@src/repositories/manga.repository';
-import { Aggregate } from 'mongoose';
+import { Aggregate, Types } from 'mongoose';
 import ChapterViewRepository from '@src/repositories/chapter-view.repository';
 import { DATE_SORT } from '@src/common/constants';
 import MangaChapterRepository from '@src/repositories/manga-chapter.repository';
@@ -10,6 +10,10 @@ import { ConfigService } from '@nestjs/config';
 import TagRepository from '@src/repositories/tag.repository';
 import { MangaChapter } from '@src/schemas/manga-chapter.schema';
 import { positiveVal } from '@src/helpers/utils';
+import { MangaLike } from '@src/schemas/manga-like.schema';
+import MangaLikeRepository from '@src/repositories/manga-like.repository';
+import MangaFollowRepository from '@src/repositories/manga-follow.repository';
+import { MangaFollow } from '@src/schemas/manga-follow.schema';
 
 @Injectable()
 export default class MangaBusiness {
@@ -21,6 +25,8 @@ export default class MangaBusiness {
         private mangaRepository: MangaRepository,
         private mangaChapterRepository: MangaChapterRepository,
         private chapterViewRepository: ChapterViewRepository,
+        private mangaLikeRepository: MangaLikeRepository,
+        private mangaFollowRepository: MangaFollowRepository,
     ) {
         this.uploadBaseUrl = this.configService.get('UPLOAD_BASE_URL');
     }
@@ -32,6 +38,27 @@ export default class MangaBusiness {
      */
     async getListPaginate(page: number, limit: number): Promise<Paginate<Manga>> {
         let mangasPaginate: Paginate<Manga> = await this.mangaRepository.getListPaginate(page, limit);
+        if (mangasPaginate.items.length > 0) {
+            mangasPaginate = {
+                ...mangasPaginate,
+                items: await this.mangaRepository.mapMangaChapterToList(mangasPaginate.items, 3),
+            };
+        }
+
+        return mangasPaginate;
+    }
+
+    /**
+     * Get paginate follow manga
+     * @param page
+     * @param limit
+     * @param accessCountToken
+     */
+    async getFollowMangas(page: number, limit: number, accessCountToken): Promise<Paginate<Manga>> {
+        const mangaFollows: string[] = await this.mangaFollowRepository.find({ accessCountToken }).distinct('manga');
+        let mangasPaginate: Paginate<Manga> = await this.mangaRepository.getListPaginate(page, limit, {
+            _id: { $in: mangaFollows },
+        });
         if (mangasPaginate.items.length > 0) {
             mangasPaginate = {
                 ...mangasPaginate,
@@ -108,9 +135,10 @@ export default class MangaBusiness {
      * Get Manga detail
      *
      * @param slug
+     * @param accessCountToken
      */
-    async getMangaDetail(slug: string): Promise<Manga | null> {
-        let manga: Manga | null = await this.mangaRepository
+    async getMangaDetail(slug: string, accessCountToken: string): Promise<Manga | null> {
+        const manga: Manga | null = await this.mangaRepository
             .findOne({
                 slug,
             })
@@ -124,7 +152,11 @@ export default class MangaBusiness {
             })
             .select('-__v');
         if (!!manga) {
-            manga = await this.mangaRepository.setChapters(manga);
+            await Promise.all([
+                this.mangaRepository.setChapters(manga),
+                this.mangaRepository.setPropertyFollowed(manga, accessCountToken),
+                this.mangaRepository.setPropertyLike(manga, accessCountToken),
+            ]);
         }
 
         return manga;
@@ -134,40 +166,71 @@ export default class MangaBusiness {
      * Like Manga
      *
      * @param slug
+     * @param accessCountToken
      */
-    async likeManga(slug: string): Promise<boolean> {
-        await this.mangaRepository.findOneAndUpdate(
-            {
-                slug,
-            },
-            {
-                $inc: {
-                    like: 1,
-                },
-            },
-        );
+    async likeManga(slug: string, accessCountToken: string): Promise<boolean> {
+        const manga: Manga | null = await this.mangaRepository.findOne({ slug });
+        if (!manga) throw new NotFoundException();
 
-        return true;
+        const mangaLike = await this.mangaLikeRepository.findOneAndUpdateRaw(
+            { manga, accessCountToken },
+            { accessCountToken },
+            { new: true, upsert: true, rawResult: true },
+        );
+        if (!!mangaLike.lastErrorObject && !mangaLike.lastErrorObject.updatedExisting) {
+            manga.like = manga.like + 1;
+            await manga.save();
+
+            return true;
+        }
+
+        return false;
     }
 
     /**
      * Follow Manga
      *
      * @param slug
+     * @param accessCountToken
      */
-    async followManga(slug: string): Promise<boolean> {
-        await this.mangaRepository.findOneAndUpdate(
-            {
-                slug,
-            },
-            {
-                $inc: {
-                    follow: 1,
-                },
-            },
-        );
+    async followManga(slug: string, accessCountToken: string): Promise<boolean> {
+        const manga: Manga | null = await this.mangaRepository.findOne({ slug });
+        if (!manga) throw new NotFoundException();
 
-        return true;
+        const mangaFollow = await this.mangaFollowRepository.findOneAndUpdateRaw(
+            { manga, accessCountToken },
+            { accessCountToken },
+            { new: true, upsert: true, rawResult: true },
+        );
+        if (!!mangaFollow.lastErrorObject && !mangaFollow.lastErrorObject.updatedExisting) {
+            manga.follow = manga.follow + 1;
+            await manga.save();
+
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Un Follow Manga
+     *
+     * @param slug
+     * @param accessCountToken
+     */
+    async unFollowManga(slug: string, accessCountToken: string): Promise<boolean> {
+        const manga: Manga | null = await this.mangaRepository.findOne({ slug });
+        if (!manga) throw new NotFoundException();
+
+        const docDelete = await this.mangaFollowRepository.deleteOne({ manga, accessCountToken });
+        if (!!docDelete && docDelete.deletedCount > 0 && manga.follow > 0) {
+            manga.follow = manga.follow - 1;
+            await manga.save();
+
+            return true;
+        }
+
+        return false;
     }
 
     /**

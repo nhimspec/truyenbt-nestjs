@@ -14,3 +14,9 @@ export type JWTPayload = {
     createdAt: string;
     updatedAt: string;
 };
+
+export interface Response<T> {
+    statusCode: number;
+    message: string;
+    data: T;
+}

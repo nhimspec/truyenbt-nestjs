@@ -50,8 +50,8 @@ class BaseRepository<T extends Document> {
     createMultiple<TCreate = T>(doc: CreateQuery<T>[], options?: SaveOptions) {
         return this.model.create(doc, options);
     }
-    remove(conditions: FilterQuery<T>) {
-        return this.model.remove(conditions);
+    deleteOne(conditions: FilterQuery<T>) {
+        return this.model.deleteOne(conditions);
     }
 }
 

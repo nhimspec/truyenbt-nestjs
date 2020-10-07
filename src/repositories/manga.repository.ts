@@ -6,12 +6,20 @@ import BaseRepository from './base.repository';
 import { paginate } from '@src/helpers/utils';
 import { MangaChapter } from '@src/schemas/manga-chapter.schema';
 import MangaChapterRepository from '@src/repositories/manga-chapter.repository';
+import MangaFollowRepository from '@src/repositories/manga-follow.repository';
+import { MangaFollow } from '@src/schemas/manga-follow.schema';
+import MangaLikeRepository from '@src/repositories/manga-like.repository';
+import { MangaLike } from '@src/schemas/manga-like.schema';
 
 @Injectable()
 class MangaRepository extends BaseRepository<Manga> {
     @InjectModel(Manga.name) protected model: Model<Manga>;
 
-    constructor(private mangaChapterRepository: MangaChapterRepository) {
+    constructor(
+        private mangaChapterRepository: MangaChapterRepository,
+        private mangaFollowRepository: MangaFollowRepository,
+        private mangaLikeRepository: MangaLikeRepository,
+    ) {
         super();
     }
 
@@ -53,6 +61,32 @@ class MangaRepository extends BaseRepository<Manga> {
     async setChapters(manga: Manga, limit?: number): Promise<Manga> {
         const chapters: MangaChapter[] = await this.mangaChapterRepository.findChaptersByManga(manga, limit);
         manga.set('chapters', chapters, { strict: false });
+
+        return manga;
+    }
+
+    /**
+     * Set followed property to manga
+     *
+     * @param manga
+     * @param accessCountToken
+     */
+    async setPropertyFollowed(manga: Manga, accessCountToken: string): Promise<Manga> {
+        const mangaFollow: MangaFollow | null = await this.mangaFollowRepository.findOne({ manga, accessCountToken });
+        manga.set('isFollow', !!mangaFollow, { strict: false });
+
+        return manga;
+    }
+
+    /**
+     * Set like property to manga
+     *
+     * @param manga
+     * @param accessCountToken
+     */
+    async setPropertyLike(manga: Manga, accessCountToken: string): Promise<Manga> {
+        const mangaLike: MangaLike | null = await this.mangaLikeRepository.findOne({ manga, accessCountToken });
+        manga.set('isLike', !!mangaLike, { strict: false });
 
         return manga;
     }
