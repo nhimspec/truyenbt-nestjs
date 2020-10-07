@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { Paginate } from '@src/helpers/typeHelper';
 import { Manga, MANGA_SORT_TYPE, MANGA_STATUS } from '@src/schemas/manga.schema';
 import MangaRepository from '@src/repositories/manga.repository';
-import { Aggregate, Types } from 'mongoose';
+import { Aggregate } from 'mongoose';
 import ChapterViewRepository from '@src/repositories/chapter-view.repository';
 import { DATE_SORT } from '@src/common/constants';
 import MangaChapterRepository from '@src/repositories/manga-chapter.repository';
@@ -10,10 +10,9 @@ import { ConfigService } from '@nestjs/config';
 import TagRepository from '@src/repositories/tag.repository';
 import { MangaChapter } from '@src/schemas/manga-chapter.schema';
 import { positiveVal } from '@src/helpers/utils';
-import { MangaLike } from '@src/schemas/manga-like.schema';
 import MangaLikeRepository from '@src/repositories/manga-like.repository';
 import MangaFollowRepository from '@src/repositories/manga-follow.repository';
-import { MangaFollow } from '@src/schemas/manga-follow.schema';
+import * as slug from 'slug';
 
 @Injectable()
 export default class MangaBusiness {
@@ -294,6 +293,7 @@ export default class MangaBusiness {
      * @param status
      * @param sort
      * @param tags
+     * @param keyword
      */
     async searchMangas(
         page: number,
@@ -301,8 +301,14 @@ export default class MangaBusiness {
         status: MANGA_STATUS,
         sort: MANGA_SORT_TYPE,
         tags: string[],
+        keyword: string,
     ): Promise<Paginate<Manga> | null> {
         let query: Aggregate<Paginate<Manga>[]> = this.mangaRepository.aggregate();
+
+        if (keyword) {
+            query = query.match({ slug: { $regex: slug(keyword), $options: 'i' } });
+        }
+
         if ([MANGA_STATUS.COMPLETE, MANGA_STATUS.CONTINUE].includes(status)) {
             query = query.match({ status: { $eq: status } });
         }

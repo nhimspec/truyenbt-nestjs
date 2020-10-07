@@ -60,7 +60,7 @@ export class MangaController {
         const sort: MANGA_SORT_TYPE = <MANGA_SORT_TYPE>searchMangaDto.sort;
         const tags: string[] = stringToArray(searchMangaDto.tags);
 
-        const mangas = await this.mangaBusiness.searchMangas(page, perPage, status, sort, tags);
+        const mangas = await this.mangaBusiness.searchMangas(page, perPage, status, sort, tags, searchMangaDto.keyword);
 
         return { data: mangas, message: 'Search mangas' };
     }

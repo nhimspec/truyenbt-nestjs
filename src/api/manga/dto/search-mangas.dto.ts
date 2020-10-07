@@ -15,6 +15,9 @@ export class SearchMangasDto {
     status: MANGA_STATUS;
 
     @IsOptional()
+    keyword: string;
+
+    @IsOptional()
     @IsIn([
         MANGA_SORT_TYPE.BY_CREATED,
         MANGA_SORT_TYPE.BY_TOP_ALL,
